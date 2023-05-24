@@ -1,5 +1,6 @@
 package com.amolsoftwares.www.mymultithreadingapp.controller;
 
+import com.amolsoftwares.www.mymultithreadingapp.entity.User;
 import com.amolsoftwares.www.mymultithreadingapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -22,7 +24,7 @@ public class UserController {
     @PostMapping(value = "/users", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}, produces = "application/json")
     public ResponseEntity saveUsers(@RequestParam(value = "files") MultipartFile[] files) throws Exception {
 
-        for (MultipartFile file: files){
+        for (MultipartFile file : files) {
             userService.saveUsers(file);
         }
 
@@ -31,7 +33,19 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public CompletableFuture<ResponseEntity> findAllUsers(){
+    public CompletableFuture<ResponseEntity> findAllUsers() {
         return userService.findAllUsers().thenApply(ResponseEntity::ok);
+    }
+
+    @GetMapping("/usersByMultithreading")
+    public ResponseEntity getAllUsersByMultithreading(){
+
+        CompletableFuture<List<User>> users1 = userService.findAllUsers();
+        CompletableFuture<List<User>> users2 = userService.findAllUsers();
+        CompletableFuture<List<User>> users3 = userService.findAllUsers();
+
+        CompletableFuture.allOf(users1, users2, users3).join();
+
+        return ResponseEntity.ok().build();
     }
 }
